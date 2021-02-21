@@ -1,23 +1,28 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import GameDetail from "../components/GameDetail";
 // Redux
 import { useDispatch, useSelector } from "react-redux";
 import { loadGames } from "../actions/gamesAction";
 // Styling and Animation
 import styled from "styled-components";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, AnimateSharedLayout } from "framer-motion";
 // Components
 import Game from "../components/Game";
-import { upcomingGamesURL } from "../api";
 
 const Home = () => {
+  // Get Current Location
+  const location = useLocation();
+  const pathId = location.pathname.split("/")[2];
   // FETCH GAMES
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(loadGames());
   }, [dispatch]);
   // Get Data Back
-  const { popular, newGames, upcoming } = useSelector((state) => state.games);
+  const { popular, newGames, upcoming, searched } = useSelector(
+    (state) => state.games
+  );
   const types = [
     { title: "Upcoming Games", data: upcoming },
     { title: "Popular Games", data: popular },
@@ -26,23 +31,45 @@ const Home = () => {
 
   return (
     <GameList>
-      <GameDetail />
-      {types.map((type) => (
-        <div>
-          <h2>{type.title}</h2>
-          <Games>
-            {type.data.map((game) => (
-              <Game
-                name={game.name}
-                released={game.released}
-                id={game.id}
-                image={game.background_image}
-                key={game.id}
-              />
-            ))}
-          </Games>
-        </div>
-      ))}
+      <AnimateSharedLayout>
+        <AnimatePresence>
+          {pathId && <GameDetail pathId={pathId} />}
+        </AnimatePresence>
+        {searched.length ? (
+          <div className="searched">
+            <h2>Searched Games</h2>
+            <Games>
+              {searched.map((game) => (
+                <Game
+                  name={game.name}
+                  released={game.released}
+                  id={game.id}
+                  image={game.background_image}
+                  key={game.id}
+                />
+              ))}
+            </Games>
+          </div>
+        ) : (
+          ""
+        )}
+        {types.map((type) => (
+          <div>
+            <h2>{type.title}</h2>
+            <Games>
+              {type.data.map((game) => (
+                <Game
+                  name={game.name}
+                  released={game.released}
+                  id={game.id}
+                  image={game.background_image}
+                  key={game.id}
+                />
+              ))}
+            </Games>
+          </div>
+        ))}
+      </AnimateSharedLayout>
     </GameList>
   );
 };
